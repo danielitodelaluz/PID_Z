@@ -120,9 +120,16 @@ void loop() {
   static float currentSetpoint = 0.0f;
   static float lastValidAltitude = 0.0f;
 
-  // Augmenter progressivement la consigne jusqu'à une cible de 150 cm
+
+// Augmenter progressivement la consigne selon la hauteur
   if (currentSetpoint < 150.0f) {
-    currentSetpoint += 20.0f * dt; // Incrémenter la consigne (MODIFIER ICI LA RAMPE)
+    if (currentSetpoint < 50.0f) {
+      currentSetpoint += 5.0f * dt; // Augmentation lente
+    } else if (currentSetpoint < 100.0f) {
+      currentSetpoint += 10.0f * dt; // Augmentation modérée
+    } else {
+      currentSetpoint += 5.0f * dt; // Augmentation rapide
+    }
     currentSetpoint = constrainFloat(currentSetpoint, 0.0f, 150.0f);
   }
 
