@@ -15,16 +15,16 @@ const uint8_t echoPin = 3;
 const uint8_t vPin = 5;
 
 // PID constants (ajustables)
-float Kp = 30.0f;
-float Ki = 0.0f;
-float Kd = 10.0f;
+float Kp_V = 30.0f;
+float Ki_V = 0.0f;
+float Kd_V = 10.0f;
 
 // Temps d'échantillonnage (en secondes)
 const float dt = 0.1f; // 100 ms
 
 // Plage de sortie PWM (en microsecondes) pour V
-const int pwmMin = 991;
-const int pwmMax = 2016;
+const int pwmMin_V = 991;
+const int pwmMax_V = 2016;
 
 //======================= Variables globales =============================
 
@@ -71,28 +71,28 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
  * Fonction CommandeV :
  *  - Calcule la commande V (PWM) pour le contrôleur de vol basée sur une consigne et une altitude mesurée
  *  - Entrées :
- *      - currentSetpoint : consigne d'altitude (en cm)
+ *      - consigne_altitude : consigne d'altitude (en cm)
  *      - currentAltitude : altitude mesurée (en cm)
  *  - Sortie :
- *      - Commande V (valeur PWM entre pwmMin et pwmMax)
+ *      - Commande V (valeur PWM entre pwmMin_V et pwmMax_V)
  */
-int CommandeV(float currentSetpoint, float currentAltitude) {
+int CommandeV(float consigne_altitude, float currentAltitude) {
   // Calcul de l'erreur
-  float error = currentSetpoint - currentAltitude;
+  float error = consigne_altitude - currentAltitude;
 
   // Calcul PID
-  float P = Kp * error;
+  float P_V = Kp_V * error;
   integral += error * dt;
-  float I = Ki * integral;
+  float I_V = Ki_V * integral;
   float derivative = (error - lastError) / dt;
-  float D = Kd * derivative;
+  float D_V = Kd_V * derivative;
 
-  float pidOutput = P + I + D;
+  float pidOutput = P_V + I_V + D_V;
   lastError = error;
 
   // Mapper directement la sortie PID vers la plage PWM
-  int vCommand = (int)mapFloat(pidOutput, -Kp * 150.0f, Kp * 150.0f, pwmMin, pwmMax);
-  vCommand = constrain(vCommand, pwmMin, pwmMax);
+  int vCommand = (int)mapFloat(pidOutput, -Kp_V * 150.0f, Kp_V * 150.0f, pwmMin_V, pwmMax_V);
+  vCommand = constrain(vCommand, pwmMin_V, pwmMax_V);
 
   return vCommand;
 }
@@ -112,25 +112,25 @@ void setup() {
   vServo.attach(vPin);
 
   // Initialisation de la commande V à un niveau neutre
-  vServo.writeMicroseconds((pwmMin + pwmMax) / 2);
+  vServo.writeMicroseconds((pwmMin_V + pwmMax_V) / 2);
 }
 
 //======================= Boucle principale ===============================
 void loop() {
-  static float currentSetpoint = 0.0f;
+  static float consigne_altitude = 0.0f;
   static float lastValidAltitude = 0.0f;
 
 
 // Augmenter progressivement la consigne selon la hauteur
-  if (currentSetpoint < 150.0f) {
-    if (currentSetpoint < 50.0f) {
-      currentSetpoint += 5.0f * dt; // Augmentation lente
-    } else if (currentSetpoint < 100.0f) {
-      currentSetpoint += 10.0f * dt; // Augmentation modérée
+  if (consigne_altitude < 150.0f) {
+    if (consigne_altitude < 50.0f) {
+      consigne_altitude += 5.0f * dt; // Augmentation lente
+    } else if (consigne_altitude < 100.0f) {
+      consigne_altitude += 10.0f * dt; // Augmentation modérée
     } else {
-      currentSetpoint += 5.0f * dt; // Augmentation rapide
+      consigne_altitude += 5.0f * dt; // Augmentation rapide
     }
-    currentSetpoint = constrainFloat(currentSetpoint, 0.0f, 150.0f);
+    consigne_altitude = constrainFloat(consigne_altitude, 0.0f, 150.0f);
   }
 
   // Lecture de l'altitude
@@ -145,14 +145,14 @@ void loop() {
   }
 
   // Calcul de la commande V
-  int vCommand = CommandeV(currentSetpoint, currentAltitude);
+  int vCommand = CommandeV(consigne_altitude, currentAltitude);
 
   // Envoi de la commande V au contrôleur de vol
   vServo.writeMicroseconds(vCommand);
 
   // Affichage sur le moniteur série
   Serial.print("Consigne : ");
-  Serial.print(currentSetpoint, 2);
+  Serial.print(consigne_altitude, 2);
   Serial.print(" cm | Altitude : ");
   Serial.print(currentAltitude, 2);
   Serial.print(" cm | PWM V : ");
