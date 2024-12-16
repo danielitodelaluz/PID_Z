@@ -100,9 +100,9 @@ int CommandeV(float currentSetpoint, float currentAltitude) {
 //======================= Setup ===========================================
 void setup() {
   // Initialisation du moniteur série
-  Serial1.begin(115200);
+  Serial.begin(115200);
   delay(1000);
-  Serial1.println("Demarrage du systeme...");
+  Serial.println("Demarrage du systeme...");
 
   // Configuration des broches du capteur ultrason
   pinMode(trigPin, OUTPUT);
@@ -144,12 +144,12 @@ void loop() {
   vServo.writeMicroseconds(vCommand);
 
   // Affichage sur le moniteur série
-  Serial1.print("Consigne : ");
-  Serial1.print(currentSetpoint, 2);
-  Serial1.print(" cm | Altitude : ");
-  Serial1.print(currentAltitude, 2);
-  Serial1.print(" cm | PWM V : ");
-  Serial1.println(vCommand);
+  Serial.print("Consigne : ");
+  Serial.print(currentSetpoint, 2);
+  Serial.print(" cm | Altitude : ");
+  Serial.print(currentAltitude, 2);
+  Serial.print(" cm | PWM V : ");
+  Serial.println(vCommand);
 
   // Pause pour respecter l'intervalle d'échantillonnage
   delay(100);
